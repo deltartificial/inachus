@@ -2,8 +2,6 @@
 
 ![inachus](assets/inachus.jpg)
 
-Ating with Ethereum smart contracts using Alloy.
-
 ## Features
 
 - Load and manage multiple contract ABIs
