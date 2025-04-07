@@ -6,16 +6,13 @@ pub mod prompt;
 pub mod step;
 pub mod validation;
 
-// Re-export commonly used types
-pub use context::Context;
-pub use error::{Error, Result};
-pub use step::Step;
+use error::Result;
 
-// Constants
+pub use context::{GlobalContext, ReadContext, WriteContext};
+
 pub const INACHUS_DIR: &str = ".inachus";
 pub const ABI_DIR: &str = "abis";
 
-// Initialize logging
 pub fn init() -> Result<()> {
     use tracing_subscriber::{fmt, EnvFilter};
 

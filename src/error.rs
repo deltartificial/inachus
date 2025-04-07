@@ -1,5 +1,3 @@
-use thiserror::Error;
-
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
@@ -52,7 +50,3 @@ impl From<alloy::primitives::Bytes> for Error {
         Error::Other(format!("Bytes error: {:?}", e))
     }
 }
-
-// In alloy 0.12, we'll handle provider errors by converting them to strings
-// rather than using a direct From implementation for now
-// Since we can't find the exact ProviderError path in alloy 0.12

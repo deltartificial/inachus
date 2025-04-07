@@ -1,6 +1,6 @@
 use alloy::json_abi::Function;
 use colored::Colorize;
-use inquire::{Select, Text};
+use inquire::{validator::Validation, Select, Text};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -15,26 +15,27 @@ pub fn select_step() -> Result<Step> {
     let steps = Step::all();
     let step = Select::new("Select an action:", steps.to_vec())
         .prompt()
-        .map_err(|e| Error::Prompt(e.to_string()))?;
+        .map_err(|e| Error::Other(e.to_string()))?;
     Ok(step)
 }
 
 pub fn select_contract_name(contract_names: &[String]) -> Result<String> {
     let contract_name = Select::new("Select a contract:", contract_names.to_vec())
         .prompt()
-        .map_err(|e| Error::Prompt(e.to_string()))?;
+        .map_err(|e| Error::Other(e.to_string()))?;
     Ok(contract_name)
 }
 
 pub fn input_contract_address() -> Result<String> {
     let address = Text::new("Enter contract address:")
-        .with_validator(|input: &str| {
-            validation::validate_contract_address(input)
-                .map(|_| ())
-                .map_err(|e| format!("{}", e))
+        .with_validator(|input: &str| -> std::result::Result<Validation, Box<dyn std::error::Error + Send + Sync>> {
+            match validation::validate_contract_address(input) {
+                Ok(_) => Ok(Validation::Valid),
+                Err(e) => Ok(Validation::Invalid(e.to_string().into()))
+            }
         })
         .prompt()
-        .map_err(|e| Error::Prompt(e.to_string()))?;
+        .map_err(|e| Error::Other(e.to_string()))?;
     Ok(address)
 }
 
@@ -42,7 +43,7 @@ pub fn select_method_type() -> Result<MethodType> {
     let method_types = vec![MethodType::Read, MethodType::Write, MethodType::All];
     let method_type = Select::new("Select method type:", method_types)
         .prompt()
-        .map_err(|e| Error::Prompt(e.to_string()))?;
+        .map_err(|e| Error::Other(e.to_string()))?;
     Ok(method_type)
 }
 
@@ -50,19 +51,23 @@ pub fn select_method(methods: &HashMap<String, Function>) -> Result<String> {
     let method_names: Vec<String> = methods.keys().cloned().collect();
     let method_name = Select::new("Select a method:", method_names)
         .prompt()
-        .map_err(|e| Error::Prompt(e.to_string()))?;
+        .map_err(|e| Error::Other(e.to_string()))?;
     Ok(method_name)
 }
 
 pub fn input_method_params(function: &Function) -> Result<Vec<String>> {
     let mut params = Vec::new();
     for param in function.inputs.iter() {
-        let param_name = param.name.as_deref().unwrap_or("unnamed");
+        let param_name = if param.name.is_empty() {
+            "unnamed"
+        } else {
+            &param.name
+        };
         let param_type = &param.ty;
         let prompt = format!("Enter {} ({}):", param_name, param_type);
         let value = Text::new(&prompt)
             .prompt()
-            .map_err(|e| Error::Prompt(e.to_string()))?;
+            .map_err(|e| Error::Other(e.to_string()))?;
         params.push(value);
     }
     Ok(params)
@@ -75,7 +80,7 @@ pub fn confirm_transaction() -> Result<bool> {
     );
     let confirm = Select::new("Do you want to proceed?", vec!["Yes", "No"])
         .prompt()
-        .map_err(|e| Error::Prompt(e.to_string()))?;
+        .map_err(|e| Error::Other(e.to_string()))?;
     Ok(confirm == "Yes")
 }
 
@@ -103,10 +108,11 @@ pub fn prompt_contract_name() -> Result<String> {
 pub fn prompt_contract_address() -> Result<String> {
     Text::new("Enter the contract address:")
         .with_help_message("Ethereum address of the deployed contract")
-        .with_validator(|input: &str| {
-            validation::validate_contract_address(input)
-                .map(|_| ())
-                .map_err(|e| format!("{}", e))
+        .with_validator(|input: &str| -> std::result::Result<Validation, Box<dyn std::error::Error + Send + Sync>> {
+            match validation::validate_contract_address(input) {
+                Ok(_) => Ok(Validation::Valid),
+                Err(e) => Ok(Validation::Invalid(e.to_string().into()))
+            }
         })
         .prompt()
         .map_err(|e| Error::Other(e.to_string()))

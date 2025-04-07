@@ -1,5 +1,5 @@
 use crate::error::{Error, Result};
-use alloy::primitives::{Address, U256};
+use alloy::primitives::U256;
 use std::str::FromStr;
 
 pub fn validate_rpc_url(url: &str) -> Result<()> {
