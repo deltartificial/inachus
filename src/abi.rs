@@ -1,12 +1,17 @@
+/// src/abi.rs
 use crate::error::{Error, Result};
 use alloy::json_abi::{Function, JsonAbi, StateMutability};
 use alloy::primitives::{Address, Bytes, U256};
 use std::{collections::HashMap, path::Path};
 
+/// Represents the types of methods that can be called on a contract.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MethodType {
+    /// Read-only methods (view or pure)
     Read,
+    /// Methods that modify state
     Write,
+    /// All methods regardless of their state mutability
     All,
 }
 
@@ -20,6 +25,15 @@ impl std::fmt::Display for MethodType {
     }
 }
 
+/// Loads all ABI files from a directory.
+///
+/// # Arguments
+///
+/// * `abi_dir` - Path to the directory containing ABI files
+///
+/// # Returns
+///
+/// * `Result<HashMap<String, JsonAbi>>` - Map of filenames to parsed ABIs, or an error
 pub fn load_abis(abi_dir: &Path) -> Result<HashMap<String, JsonAbi>> {
     let mut abis = HashMap::new();
     for entry in std::fs::read_dir(abi_dir)? {
@@ -40,6 +54,16 @@ pub fn load_abis(abi_dir: &Path) -> Result<HashMap<String, JsonAbi>> {
     Ok(abis)
 }
 
+/// Gets methods from an ABI filtered by the specified method type.
+///
+/// # Arguments
+///
+/// * `abi` - The ABI to extract methods from
+/// * `method_type` - The type of methods to extract (Read, Write, or All)
+///
+/// # Returns
+///
+/// * `HashMap<String, Function>` - Map of method names to Function objects
 pub fn get_methods_by_type(abi: &JsonAbi, method_type: MethodType) -> HashMap<String, Function> {
     let mut read_methods = HashMap::new();
     let mut write_methods = HashMap::new();
@@ -65,6 +89,16 @@ pub fn get_methods_by_type(abi: &JsonAbi, method_type: MethodType) -> HashMap<St
     }
 }
 
+/// Parses an array or slice input string into a vector of Bytes.
+///
+/// # Arguments
+///
+/// * `input` - The input string representing an array (e.g., "[1, 2, 3]")
+/// * `param_type` - The type of elements in the array
+///
+/// # Returns
+///
+/// * `Result<Vec<Bytes>>` - Vector of parsed elements as Bytes, or an error
 pub fn parse_array_or_slice_input(input: &str, param_type: &str) -> Result<Vec<Bytes>> {
     let input = input.trim().trim_matches(|c| c == '[' || c == ']');
     let parts: Vec<&str> = input.split(',').map(str::trim).collect();
@@ -107,6 +141,16 @@ pub fn parse_array_or_slice_input(input: &str, param_type: &str) -> Result<Vec<B
     Ok(result)
 }
 
+/// Parses a tuple input string into a vector of Bytes.
+///
+/// # Arguments
+///
+/// * `input` - The input string representing a tuple (e.g., "(1, true, 0x1234)")
+/// * `param_types` - The types of elements in the tuple
+///
+/// # Returns
+///
+/// * `Result<Vec<Bytes>>` - Vector of parsed elements as Bytes, or an error
 pub fn parse_tuple_input(input: &str, param_types: &[String]) -> Result<Vec<Bytes>> {
     let input = input.trim().trim_matches(|c| c == '(' || c == ')');
     let parts: Vec<&str> = input.split(',').map(str::trim).collect();
