@@ -1,0 +1,24 @@
+pub mod abi;
+pub mod config;
+pub mod context;
+pub mod error;
+pub mod prompt;
+pub mod step;
+pub mod validation;
+
+// Re-export commonly used types
+pub use context::Context;
+pub use error::{Error, Result};
+pub use step::Step;
+
+// Constants
+pub const INACHUS_DIR: &str = ".inachus";
+pub const ABI_DIR: &str = "abis";
+
+// Initialize logging
+pub fn init_logging() {
+    use tracing_subscriber::{fmt, EnvFilter};
+    fmt()
+        .with_env_filter(EnvFilter::from_default_env().add_directive(tracing::Level::INFO.into()))
+        .init();
+}
