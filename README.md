@@ -1,6 +1,8 @@
-# Inachus
+# inachus
 
-A command-line tool for interacting with Ethereum smart contracts using Alloy.
+![inachus](assets/inachus.jpg)
+
+Ating with Ethereum smart contracts using Alloy.
 
 ## Features
 
@@ -11,14 +13,6 @@ A command-line tool for interacting with Ethereum smart contracts using Alloy.
 - Support for array and tuple parameters
 - Transaction confirmation for write operations
 - Automatic parameter validation
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/inachus.git
-cd inachus
-```
 
 2. Build the project:
 ```bash
@@ -69,28 +63,6 @@ cargo run --release
    - Choose between read and write methods
    - Input method parameters
    - Execute transactions
-
-## Supported Parameter Types
-
-- Address
-- Uint256/Int256
-- Boolean
-- String
-- Bytes
-- Arrays of supported types
-- Tuples of supported types
-
-## Error Handling
-
-The tool provides detailed error messages for:
-- Invalid RPC URLs
-- Invalid addresses
-- Invalid private keys
-- Invalid chain IDs
-- Invalid contract names
-- Invalid parameter values
-- Network errors
-- Contract execution errors
 
 ## License
 
