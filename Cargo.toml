@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "crates/chain_info",
+    "crates/text"
+]
+
+[package]
+name = "inachus"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chain_info = { path = "crates/chain_info" }
+text = { path = "crates/text" }
