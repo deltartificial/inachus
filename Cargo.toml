@@ -35,11 +35,6 @@ alloy = { version = "0.12", features = [
     "signer-trezor",
     "signer-yubihsm",
 ] }
-alloy-json-abi = "0.12"
-alloy-primitives = "0.12"
-alloy-providers = "0.12"
-alloy-signer = "0.12"
-alloy-transport-http = "0.12"
 hex = "0.4"
 humantime = "2.1"
 anyhow = "1.0"

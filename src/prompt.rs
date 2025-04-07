@@ -1,7 +1,8 @@
-use alloy_json_abi::Function;
+use alloy::json_abi::Function;
 use colored::Colorize;
 use inquire::{Select, Text};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use crate::{
     abi::MethodType,
@@ -81,4 +82,70 @@ pub fn confirm_transaction() -> Result<bool> {
 pub fn display_result(result: &str) {
     println!("\n{}", "Result:".green());
     println!("{}", result);
+}
+
+pub fn prompt_abi_dir() -> Result<PathBuf> {
+    Text::new("Enter the path to the ABI directory:")
+        .with_default("./abis")
+        .with_help_message("Directory containing ABI JSON files")
+        .prompt()
+        .map(PathBuf::from)
+        .map_err(|e| Error::Other(e.to_string()))
+}
+
+pub fn prompt_contract_name() -> Result<String> {
+    Text::new("Enter the contract name:")
+        .with_help_message("Name of the contract to interact with")
+        .prompt()
+        .map_err(|e| Error::Other(e.to_string()))
+}
+
+pub fn prompt_contract_address() -> Result<String> {
+    Text::new("Enter the contract address:")
+        .with_help_message("Ethereum address of the deployed contract")
+        .with_validator(|input: &str| {
+            validation::validate_contract_address(input)
+                .map(|_| ())
+                .map_err(|e| format!("{}", e))
+        })
+        .prompt()
+        .map_err(|e| Error::Other(e.to_string()))
+}
+
+pub fn prompt_rpc_url() -> Result<String> {
+    Text::new("Enter the Ethereum RPC URL:")
+        .with_default("http://localhost:8545")
+        .with_help_message("URL of the Ethereum JSON-RPC endpoint")
+        .prompt()
+        .map_err(|e| Error::Other(e.to_string()))
+}
+
+pub fn prompt_private_key() -> Result<String> {
+    Text::new("Enter your private key (without 0x prefix):")
+        .with_help_message("Private key for transaction signing")
+        .prompt()
+        .map_err(|e| Error::Other(e.to_string()))
+}
+
+pub fn prompt_chain_id() -> Result<String> {
+    Text::new("Enter the chain ID:")
+        .with_default("1")
+        .with_help_message("Chain ID for transaction signing (1 for Ethereum Mainnet)")
+        .prompt()
+        .map_err(|e| Error::Other(e.to_string()))
+}
+
+pub fn prompt_method(methods: &[Function]) -> Result<Function> {
+    let method_names: Vec<String> = methods.iter().map(|m| m.name.clone()).collect();
+
+    let selected_name = Select::new("Select a method to call:", method_names)
+        .with_help_message("Choose a contract method to execute")
+        .prompt()
+        .map_err(|e| Error::Other(e.to_string()))?;
+
+    methods
+        .iter()
+        .find(|m| m.name == selected_name)
+        .cloned()
+        .ok_or_else(|| Error::InvalidFunction(format!("Method {} not found", selected_name)))
 }

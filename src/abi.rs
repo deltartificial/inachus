@@ -1,6 +1,6 @@
 use crate::error::{Error, Result};
-use alloy_json_abi::{Function, JsonAbi};
-use alloy_primitives::{Address, Bytes, U256};
+use alloy::json_abi::{Function, JsonAbi, StateMutability};
+use alloy::primitives::{Address, Bytes, U256};
 use std::{collections::HashMap, path::Path};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,10 +28,10 @@ pub fn load_abis(abi_dir: &Path) -> Result<HashMap<String, JsonAbi>> {
         if path.extension().map_or(false, |ext| ext == "abi") {
             let content = std::fs::read_to_string(&path)?;
             let abi: JsonAbi = serde_json::from_str(&content)
-                .map_err(|e| Error::Abi(format!("Failed to parse ABI: {}", e)))?;
+                .map_err(|e| Error::InvalidAbi(format!("Failed to parse ABI: {}", e)))?;
             let name = path
                 .file_name()
-                .ok_or_else(|| Error::Abi("Invalid ABI filename".to_string()))?
+                .ok_or_else(|| Error::InvalidAbi("Invalid ABI filename".to_string()))?
                 .to_string_lossy()
                 .to_string();
             abis.insert(name, abi);
@@ -47,7 +47,10 @@ pub fn get_methods_by_type(abi: &JsonAbi, method_type: MethodType) -> HashMap<St
 
     for function in abi.functions() {
         let name = function.name.clone();
-        if function.state_mutability.is_view() || function.state_mutability.is_pure() {
+        if matches!(
+            function.state_mutability,
+            StateMutability::View | StateMutability::Pure
+        ) {
             read_methods.insert(name.clone(), function.clone());
         } else {
             write_methods.insert(name.clone(), function.clone());
@@ -71,18 +74,18 @@ pub fn parse_array_or_slice_input(input: &str, param_type: &str) -> Result<Vec<B
         match param_type {
             "address" => {
                 let addr = Address::parse_checksummed(part, None)
-                    .map_err(|_| Error::Abi(format!("Invalid address: {}", part)))?;
-                result.push(addr.into());
+                    .map_err(|_| Error::InvalidAddress(format!("Invalid address: {}", part)))?;
+                result.push(addr.to_vec().into());
             }
             "uint256" | "int256" => {
                 let num = U256::from_str_radix(part, 10)
-                    .map_err(|_| Error::Abi(format!("Invalid number: {}", part)))?;
-                result.push(num.into());
+                    .map_err(|_| Error::InvalidArguments(format!("Invalid number: {}", part)))?;
+                result.push(num.to_be_bytes::<32>().into());
             }
             "bool" => {
                 let b = part
                     .parse::<bool>()
-                    .map_err(|_| Error::Abi(format!("Invalid boolean: {}", part)))?;
+                    .map_err(|_| Error::InvalidArguments(format!("Invalid boolean: {}", part)))?;
                 result.push(Bytes::from_static(if b { &[1] } else { &[0] }));
             }
             "string" => {
@@ -90,11 +93,11 @@ pub fn parse_array_or_slice_input(input: &str, param_type: &str) -> Result<Vec<B
             }
             "bytes" => {
                 let bytes = hex::decode(part.trim_start_matches("0x"))
-                    .map_err(|_| Error::Abi(format!("Invalid hex: {}", part)))?;
+                    .map_err(|_| Error::InvalidArguments(format!("Invalid hex: {}", part)))?;
                 result.push(Bytes::copy_from_slice(&bytes));
             }
             _ => {
-                return Err(Error::Abi(format!(
+                return Err(Error::InvalidArguments(format!(
                     "Unsupported array type: {}",
                     param_type
                 )))
@@ -109,7 +112,7 @@ pub fn parse_tuple_input(input: &str, param_types: &[String]) -> Result<Vec<Byte
     let parts: Vec<&str> = input.split(',').map(str::trim).collect();
 
     if parts.len() != param_types.len() {
-        return Err(Error::Abi(format!(
+        return Err(Error::InvalidArguments(format!(
             "Tuple input length mismatch: expected {}, got {}",
             param_types.len(),
             parts.len()
@@ -121,18 +124,18 @@ pub fn parse_tuple_input(input: &str, param_types: &[String]) -> Result<Vec<Byte
         match param_type.as_str() {
             "address" => {
                 let addr = Address::parse_checksummed(part, None)
-                    .map_err(|_| Error::Abi(format!("Invalid address: {}", part)))?;
-                result.push(addr.into());
+                    .map_err(|_| Error::InvalidAddress(format!("Invalid address: {}", part)))?;
+                result.push(addr.to_vec().into());
             }
             "uint256" | "int256" => {
                 let num = U256::from_str_radix(part, 10)
-                    .map_err(|_| Error::Abi(format!("Invalid number: {}", part)))?;
-                result.push(num.into());
+                    .map_err(|_| Error::InvalidArguments(format!("Invalid number: {}", part)))?;
+                result.push(num.to_be_bytes::<32>().into());
             }
             "bool" => {
                 let b = part
                     .parse::<bool>()
-                    .map_err(|_| Error::Abi(format!("Invalid boolean: {}", part)))?;
+                    .map_err(|_| Error::InvalidArguments(format!("Invalid boolean: {}", part)))?;
                 result.push(Bytes::from_static(if b { &[1] } else { &[0] }));
             }
             "string" => {
@@ -140,11 +143,11 @@ pub fn parse_tuple_input(input: &str, param_types: &[String]) -> Result<Vec<Byte
             }
             "bytes" => {
                 let bytes = hex::decode(part.trim_start_matches("0x"))
-                    .map_err(|_| Error::Abi(format!("Invalid hex: {}", part)))?;
+                    .map_err(|_| Error::InvalidArguments(format!("Invalid hex: {}", part)))?;
                 result.push(Bytes::copy_from_slice(&bytes));
             }
             _ => {
-                return Err(Error::Abi(format!(
+                return Err(Error::InvalidArguments(format!(
                     "Unsupported tuple type: {}",
                     param_type
                 )))

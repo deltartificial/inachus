@@ -1,10 +1,10 @@
 use crate::error::{Error, Result};
-use alloy_primitives::{Address, U256};
+use alloy::primitives::{Address, U256};
 use std::str::FromStr;
 
 pub fn validate_rpc_url(url: &str) -> Result<()> {
     if !url.starts_with("http://") && !url.starts_with("https://") {
-        return Err(Error::InvalidRpcUrl(url.to_string()));
+        return Err(Error::InvalidAddress(format!("Invalid RPC URL: {}", url)));
     }
     Ok(())
 }
@@ -22,10 +22,7 @@ pub fn validate_address(address: &str) -> Result<()> {
         ));
     }
 
-    if !address[2..]
-        .chars()
-        .all(|c| c.is_ascii_hexdigit())
-    {
+    if !address[2..].chars().all(|c| c.is_ascii_hexdigit()) {
         return Err(Error::InvalidAddress(
             "Address must be hexadecimal".to_string(),
         ));
@@ -72,7 +69,10 @@ pub fn validate_contract_name(contract_name: &str) -> Result<()> {
         ));
     }
 
-    if !contract_name.chars().all(|c| c.is_alphanumeric() || c == '_') {
+    if !contract_name
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_')
+    {
         return Err(Error::InvalidContract(
             "Contract name must be alphanumeric or underscore".to_string(),
         ));
