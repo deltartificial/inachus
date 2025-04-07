@@ -1,3 +1,5 @@
+/// src/bin/inachus/main.rs
+
 use std::{collections::HashMap, path::PathBuf};
 use alloy_json_abi::{Function, JsonAbi};
 use alloy_primitives::{Address, Bytes};
@@ -13,6 +15,15 @@ use inachus::{
     ABI_DIR, INACHUS_DIR,
 };
 
+/// Main entry point for the Inachus application.
+/// 
+/// This function initializes the application, loads configuration,
+/// and enters the main application loop where the user can interact
+/// with Ethereum contracts.
+///
+/// # Returns
+///
+/// * `Result<()>` - Success or an error during application execution
 #[tokio::main]
 async fn main() -> Result<()> {
     inachus::init_logging();
@@ -81,6 +92,20 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+/// Executes a contract method with the given parameters.
+///
+/// This function handles encoding parameters, sending the transaction,
+/// and decoding the response for both read and write operations.
+///
+/// # Arguments
+///
+/// * `ctx` - The application context
+/// * `function` - The contract function to execute
+/// * `params` - String representations of the function parameters
+///
+/// # Returns
+///
+/// * `Result<String>` - String representation of the result or an error
 async fn execute_method(ctx: &Context, function: &Function, params: &[String]) -> Result<String> {
     let mut encoded_params = Vec::new();
     for (param, value) in function.inputs.iter().zip(params) {
