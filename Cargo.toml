@@ -18,13 +18,30 @@ serde_json = "1.0"
 toml = "0.8.2"
 lazy_static = "1.5.0"
 regex = "1.11.1"
-alloy-primitives = "0.6.3"
-alloy-sol-types = "0.6.3"
-alloy-json-abi = "0.6.3"
-alloy-providers = "0.6.3"
-alloy-signer = "0.6.3"
-alloy-transport = "0.6.3"
-alloy-transport-http = "0.6.3"
+alloy = { version = "0.12", features = [
+    "eips",
+    "full",
+    "hyper",
+    "json-rpc",
+    "node-bindings",
+    "rpc-client",
+    "rpc-types-debug",
+    "rpc-types-trace",
+    "signer-aws",
+    "signer-gcp",
+    "signer-keystore",
+    "signer-ledger",
+    "signer-mnemonic",
+    "signer-trezor",
+    "signer-yubihsm",
+] }
+alloy-json-abi = "0.12"
+alloy-primitives = "0.12"
+alloy-providers = "0.12"
+alloy-signer = "0.12"
+alloy-transport-http = "0.12"
+hex = "0.4"
+humantime = "2.1"
 anyhow = "1.0"
 thiserror = "1.0"
 dirs = "5.0"
@@ -33,7 +50,7 @@ colored = "2.1"
 async-trait = "0.1"
 futures = "0.3"
 tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [lib]
 name = "inachus"
