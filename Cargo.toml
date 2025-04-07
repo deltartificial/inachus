@@ -12,3 +12,6 @@ edition = "2021"
 [dependencies]
 chain_info = { path = "crates/chain_info" }
 text = { path = "crates/text" }
+tokio = { version = "1.28", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8.2"
